@@ -19,4 +19,4 @@ jobs:
 
       - name: Run script
         id: checker
-        run: .src/CheckModuleData.ps1
+        run: ./src/CheckModuleData.ps1
