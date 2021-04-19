@@ -39,7 +39,13 @@
 # ================
 
 # Install newest module
-Install-Module MicrosoftTeams -Scope CurrentUser -AllowPrerelease
+try {
+  Install-Module MicrosoftTeams -Scope CurrentUser -AllowPrerelease -Force
+  Write-Host "MicrosoftTeams module installed"
+} catch {
+  $err = $_
+  Write-Error $err
+}
 
 Get-Module MicrosoftTeams -ListAvailable
 
