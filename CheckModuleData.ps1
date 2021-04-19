@@ -41,7 +41,7 @@
 # Install newest module
 Install-Module MicrosoftTeams -Scope CurrentUser -AllowPrerelease
 
-Get-Module MicrosoftTeams
+Get-Module MicrosoftTeams -ListAvailable
 
 # Connect
 
