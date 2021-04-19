@@ -29,6 +29,9 @@
 # ================
 #region Variables
 # ================
+$dataFolder = 'data'
+$dataCmdletsFolder = Join-Path $dataFolder 'cmdlets'
+$cmdletsFilePath = Join-Path $dataCmdletsFolder 'cmdlets.json'
 
 # ================
 #endregion Variables
@@ -38,12 +41,20 @@
 #region Processing
 # ================
 
+Write-Host "Started processing MicrosoftTeams module"
+
+if ($env:GITHUB_ACTIONS) {
+  Set-Location $env:GITHUB_WORKSPACE
+}
+
 # Install newest module
 try {
-  Install-Module MicrosoftTeams -Scope CurrentUser -AllowPrerelease -Force
+  Set-PSRepository PSGallery -InstallationPolicy Trusted
+  Install-Module MicrosoftTeams -Scope CurrentUser -AllowPrerelease -ErrorAction Stop
   Write-Host "MicrosoftTeams module installed"
 } catch {
   $err = $_
+  Write-Host "Error installing MicrosofTeams module"
   Write-Error $err
 }
 
@@ -54,6 +65,12 @@ Get-Module MicrosoftTeams -ListAvailable
 # ================
 #region Process cmdlets
 # ================
+if (-not (Test-Path $dataCmdletsFolder)) {
+  New-Item -ItemType Directory $dataCmdletsFolder
+}
+$currentCmdlets = Get-Command -Module 'MicrosoftTeams'
+$currentCmdlets.Name
+$currentCmdlets | Select-Object Name, CommandType | ConvertTo-Csv | ConvertFrom-Csv | ConvertTo-Json -Depth 10 | Out-File $cmdletsFilePath -Force
 
 # ================
 #endregion Process cmdlets
