@@ -52,21 +52,19 @@ try {
   Set-PSRepository PSGallery -InstallationPolicy Trusted
   Install-Module MicrosoftTeams -Scope CurrentUser -AllowPrerelease -ErrorAction Stop
   Write-Host "MicrosoftTeams module installed"
+  Import-Module 'MicrosoftTeams'
+  Write-Host "MicrosoftTeams module imported"
 } catch {
   $err = $_
   Write-Host "Error installing MicrosofTeams module"
   Write-Error $err
 }
 
-Get-Module MicrosoftTeams -ListAvailable
-
-# Connect
-
 # ================
 #region Process cmdlets
 # ================
 if (-not (Test-Path $dataCmdletsFolder)) {
-  New-Item -ItemType Directory $dataCmdletsFolder
+  New-Item -ItemType Directory $dataCmdletsFolder | Out-Null
 }
 $currentCmdlets = Get-Command -Module 'MicrosoftTeams'
 $currentCmdlets.Name
