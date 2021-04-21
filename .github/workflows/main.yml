@@ -14,10 +14,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          path: data
+          path: src
       - uses: actions/checkout@v2
         with:
-          ref: "main"
+          ref: data
           path: data
       - name: Run script
         id: checker
