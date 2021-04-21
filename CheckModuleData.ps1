@@ -138,8 +138,8 @@ foreach ($cmdlet in $currentCmdlets) {
 
   # Getting current parameter list
   $currentParams = $cmdlet.Parameters.GetEnumerator() | Select-Object -ExpandProperty Key
-  $addedParams = @($currentParams | Where-Object -FilterScript {$_.Name -notin $cachedParams.Name})
-  $removedParams = @($cachedParams | Where-Object -FilterScript {$_.Name -notin $currentParams.Name})
+  $addedParams = @($currentParams | Where-Object -FilterScript {$_.Name -notin $cachedParams})
+  $removedParams = @($cachedParams | Where-Object -FilterScript {$_.Name -notin $currentParams})
   Write-Host "Added cmdlets:   $($addedParams.Count)"
   Write-Host "Removed cmdlets: $($removedParams.Count)"
 
@@ -161,7 +161,7 @@ foreach ($cmdlet in $currentCmdlets) {
       Timestamp = Get-Date -UFormat $timeFormatString
     }) + $changelogContent
   }
-  $currentParams | Select-Object Name, CommandType | ConvertTo-Csv | ConvertFrom-Csv | ConvertTo-Json -Depth 10 | Out-File $cmdletParamsFilePath -Force
+  $currentParams | ConvertTo-Json -Depth 10 | Out-File $cmdletParamsFilePath -Force
 } # end of foreach
 
 } catch {
