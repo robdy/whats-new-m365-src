@@ -50,10 +50,8 @@ if ($env:GITHUB_ACTIONS) {
 # Install newest module
 try {
   Set-PSRepository PSGallery -InstallationPolicy Trusted
-  Install-Module MicrosoftTeams -Scope CurrentUser -AllowPrerelease -ErrorAction Stop
+  Install-Module MicrosoftTeams -Scope CurrentUser -AllowPrerelease -ErrorAction Stop -RequiredVersion '2.1.0-preview'
   Write-Host "MicrosoftTeams module installed"
-  Import-Module 'MicrosoftTeams'
-  Write-Host "MicrosoftTeams module imported"
 } catch {
   $err = $_
   Write-Host "Error installing MicrosofTeams module"
