@@ -140,8 +140,6 @@ foreach ($cmdlet in $currentCmdlets) {
   $currentParams = $cmdlet.Parameters.GetEnumerator() | Select-Object -ExpandProperty Key
   $addedParams = @($currentParams | Where-Object -FilterScript {$_.Name -notin $cachedParams})
   $removedParams = @($cachedParams | Where-Object -FilterScript {$_.Name -notin $currentParams})
-  Write-Host "Added cmdlets:   $($addedParams.Count)"
-  Write-Host "Removed cmdlets: $($removedParams.Count)"
 
   foreach ($addedParam in $addedParams) {
     $changelogContent = @([pscustomobject]@{
