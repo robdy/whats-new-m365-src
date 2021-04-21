@@ -30,8 +30,15 @@
 #region Variables
 # ================
 $dataFolder = 'data'
+
+# Cmdlets
 $dataCmdletsFolder = Join-Path $dataFolder 'cmdlets'
 $cmdletsFilePath = Join-Path $dataCmdletsFolder 'cmdlets.json'
+
+# Params
+$dataParamsFolder = Join-Path $dataFolder 'params'
+
+# Common
 $changelogPath = Join-Path $dataFolder 'changelog.json'
 $timeFormatString = '%Y-%m-%d %H:%M:%S'
 
@@ -87,7 +94,7 @@ try {
   foreach ($addedCmdlet in $addedCmdlets) {
     $changelogContent = @([pscustomobject]@{
       Category = "Cmdlet"
-      Object = $addedCmdlet.Name
+      Cmdlet = $addedCmdlet.Name
       Event = "Add"
       Timestamp = Get-Date -UFormat $timeFormatString
     }) + $changelogContent
@@ -95,7 +102,7 @@ try {
   foreach ($removedCmdlet in $removedCmdlets) {
     $changelogContent = @([pscustomobject]@{
       Category = "Cmdlet"
-      Object = $removedCmdlet.Name
+      Cmdlet = $removedCmdlet.Name
       Event = "Remove"
       Timestamp = Get-Date -UFormat $timeFormatString
     }) + $changelogContent
@@ -111,6 +118,57 @@ try {
 # ================
 #endregion Process cmdlets
 # ================
+try {
+  if (-not (Test-Path $dataParamsFolder)) {
+  # No directory, create it
+  New-Item -ItemType Directory $dataParamsFolder | Out-Null
+}
+
+foreach ($cmdlet in $currentCmdlets) {
+  <#
+  $cmdlet = $currentCmdlets[0]
+  #>
+  $cachedParams = $null
+  $cmdletParamsFilePath = Join-Path $dataParamsFolder "$($cmdlet.Name).json"
+
+  if (Test-Path $cmdletParamsFilePath) {
+    # Cached file exists, import it
+    $cachedParams = Get-Content -Path $cmdletParamsFilePath | ConvertFrom-Json
+  }
+
+  # Getting current parameter list
+  $currentParams = $cmdlet.Parameters.GetEnumerator() | Select-Object -ExpandProperty Key
+  $addedParams = @($currentParams | Where-Object -FilterScript {$_.Name -notin $cachedParams.Name})
+  $removedParams = @($cachedParams | Where-Object -FilterScript {$_.Name -notin $currentParams.Name})
+  Write-Host "Added cmdlets:   $($addedParams.Count)"
+  Write-Host "Removed cmdlets: $($removedParams.Count)"
+
+  foreach ($addedParam in $addedParams) {
+    $changelogContent = @([pscustomobject]@{
+      Category = "Param"
+      Cmdlet = $cmdlet.Name
+      Param = $addedParam
+      Event = "Add"
+      Timestamp = Get-Date -UFormat $timeFormatString
+    }) + $changelogContent
+  }
+  foreach ($removedParam in $removedParams) {
+    $changelogContent = @([pscustomobject]@{
+      Category = "Param"
+      Cmdlet = $cmdlet.Name
+      Param = $removedParam
+      Event = "Remove"
+      Timestamp = Get-Date -UFormat $timeFormatString
+    }) + $changelogContent
+  }
+  $currentParams | Select-Object Name, CommandType | ConvertTo-Csv | ConvertFrom-Csv | ConvertTo-Json -Depth 10 | Out-File $cmdletParamsFilePath -Force
+} # end of foreach
+
+} catch {
+  $err = $_
+  Write-Host "Error processing MicrosofTeams cmdlet params"
+  Write-Error $err
+}
 
 # ================
 #region Process cmdlet params
