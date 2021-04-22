@@ -118,6 +118,11 @@ try {
 # ================
 #endregion Process cmdlets
 # ================
+
+# ================
+#region Process cmdlet params
+# ================
+
 try {
   if (-not (Test-Path $dataParamsFolder)) {
   # No directory, create it
@@ -138,8 +143,8 @@ foreach ($cmdlet in $currentCmdlets) {
 
   # Getting current parameter list
   $currentParams = $cmdlet.Parameters.GetEnumerator() | Select-Object -ExpandProperty Key
-  $addedParams = @($currentParams | Where-Object -FilterScript {$_.Name -notin $cachedParams})
-  $removedParams = @($cachedParams | Where-Object -FilterScript {$_.Name -notin $currentParams})
+  $addedParams = @($currentParams | Where-Object -FilterScript {$_ -notin $cachedParams})
+  $removedParams = @($cachedParams | Where-Object -FilterScript {$_ -notin $currentParams})
 
   foreach ($addedParam in $addedParams) {
     $changelogContent = @([pscustomobject]@{
@@ -167,10 +172,6 @@ foreach ($cmdlet in $currentCmdlets) {
   Write-Host "Error processing MicrosofTeams cmdlet params"
   Write-Error $err
 }
-
-# ================
-#region Process cmdlet params
-# ================
 
 # ================
 #endregion Process cmdlet params
