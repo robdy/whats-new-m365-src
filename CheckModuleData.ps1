@@ -125,11 +125,13 @@ try {
 
 try {
   if (-not (Test-Path $dataParamsFolder)) {
-  # No directory, create it
-  New-Item -ItemType Directory $dataParamsFolder | Out-Null
-}
+    # No directory, create it
+    New-Item -ItemType Directory $dataParamsFolder | Out-Null
+  }
 
-foreach ($cmdlet in $currentCmdlets) {
+  # Do not process newly-added cmdlets
+  $currentCmdletsNotNew = $currentCmdlets | Where-Object -FilterScript {$_.Name -notin $addedCmdlets.Name}
+  foreach ($cmdlet in $currentCmdletsNotNew) {
   <#
   $cmdlet = $currentCmdlets[0]
   #>
