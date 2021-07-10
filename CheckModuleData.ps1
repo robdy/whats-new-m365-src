@@ -130,8 +130,7 @@ try {
   }
 
   # Do not process newly-added cmdlets
-  $currentCmdletsNotNew = $currentCmdlets | Where-Object -FilterScript {$_.Name -notin $addedCmdlets.Name}
-  foreach ($cmdlet in $currentCmdletsNotNew) {
+  foreach ($cmdlet in $currentCmdlets) {
   <#
   $cmdlet = $currentCmdlets[0]
   #>
@@ -148,24 +147,35 @@ try {
   $addedParams = @($currentParams | Where-Object -FilterScript {$_ -notin $cachedParams})
   $removedParams = @($cachedParams | Where-Object -FilterScript {$_ -notin $currentParams})
 
-  foreach ($addedParam in $addedParams) {
-    $changelogContent = @([pscustomobject]@{
-      Category = "Param"
-      Cmdlet = $cmdlet.Name
-      Param = $addedParam
-      Event = "Add"
-      Timestamp = Get-Date -UFormat $timeFormatString
-    }) + $changelogContent
+  # Do not add changelog entry for newly-added cmdlet
+  if ($cmdlet.Name -notin $addedCmdlets.Name) {
+    foreach ($addedParam in $addedParams) {
+      $changelogContent = @([pscustomobject]@{
+        Category = "Param"
+        Cmdlet = $cmdlet.Name
+        Param = $addedParam
+        Event = "Add"
+        Timestamp = Get-Date -UFormat $timeFormatString
+      }) + $changelogContent
+    }
   }
-  foreach ($removedParam in $removedParams) {
-    $changelogContent = @([pscustomobject]@{
-      Category = "Param"
-      Cmdlet = $cmdlet.Name
-      Param = $removedParam
-      Event = "Remove"
-      Timestamp = Get-Date -UFormat $timeFormatString
-    }) + $changelogContent
+
+  # Do not add changelog entry for removed cmdlets
+  if ($cmdlet.Name -notin $removedCmdlets.Name) {
+    foreach ($removedParam in $removedParams) {
+      $changelogContent = @([pscustomobject]@{
+        Category = "Param"
+        Cmdlet = $cmdlet.Name
+        Param = $removedParam
+        Event = "Remove"
+        Timestamp = Get-Date -UFormat $timeFormatString
+      }) + $changelogContent
+    }  
   }
+
+  # Export params to the file
+  # Also applies to newly-added cmdlets
+  # So that next run has something to compare with
   $currentParams | ConvertTo-Json -Depth 10 | Out-File $cmdletParamsFilePath -Force
 } # end of foreach
 
