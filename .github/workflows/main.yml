@@ -22,6 +22,9 @@ jobs:
       - name: Run script
         id: checker
         run: ./src/CheckModuleData.ps1
+        env: # Or as an environment variable
+          M365_USERNAME: ${{ secrets.M365_USERNAME }}
+          M365_PASSWORD: ${{ secrets.M365_PASSWORD }}
       - name: Commit changes
         run: |
           cd data

@@ -38,9 +38,14 @@ $cmdletsFilePath = Join-Path $dataCmdletsFolder 'cmdlets.json'
 # Params
 $dataParamsFolder = Join-Path $dataFolder 'params'
 
+# Policies
+$dataPoliciesFolder = Join-Path $dataFolder 'policies'
+
 # Common
 $changelogPath = Join-Path $dataFolder 'changelog.json'
 $timeFormatString = '%Y-%m-%d %H:%M:%S'
+$m365PassString = ConvertTo-SecureString $env:M365_PASSWORD -AsPlainText -Force
+$m365Creds = New-Object System.Management.Automation.PSCredential ($env:M365_USERNAME, $m365PassString)
 
 # ================
 #endregion Variables
@@ -71,6 +76,9 @@ if (Test-Path $changelogPath) {
   $changelogContent = Get-Content -Path $changelogPath | ConvertFrom-Json
 }
 
+# Get all cmdlets
+$currentCmdlets = Get-Command -Module 'MicrosoftTeams'
+
 # ================
 #region Process cmdlets
 # ================
@@ -85,7 +93,6 @@ try {
     $cachedCmdlets = Get-Content -Path $cmdletsFilePath | ConvertFrom-Json
   }
 
-  $currentCmdlets = Get-Command -Module 'MicrosoftTeams'
   $addedCmdlets = @($currentCmdlets | Where-Object -FilterScript {$_.Name -notin $cachedCmdlets.Name})
   $removedCmdlets = @($cachedCmdlets | Where-Object -FilterScript {$_.Name -notin $currentCmdlets.Name})
   Write-Host "Added cmdlets:   $($addedCmdlets.Count)"
@@ -193,11 +200,98 @@ try {
 #region Process policies
 # ================
 
+try {
+  $allPoliciesCmdlets = $currentCmdlets | Where-Object {
+  $_.Name -match "Get-Cs\w*(Policy|Configuration|Settings)$" -and 
+  $_.Name -notin @(
+    "Get-CsOnlineVoicemailUserSettings", # User cmdlet
+    "Get-CsUserPstnSettings", # User cmdlet
+    # Not available for dev tenant
+    "Get-CsOnlineDialInConferencingTenantSettings",
+    "Get-CsNetworkConfiguration",
+    "Get-CsTenantNetworkConfiguration",
+    "Get-CsTeamsAudioConferencingPolicy",
+    # Not working currently
+    "Get-CsTeamsWorkLoadPolicy"
+    )
+  }
+
+  if (-not (Test-Path $dataPoliciesFolder)) {
+    # No directory, create it
+    New-Item -ItemType Directory $dataPoliciesFolder | Out-Null
+  }
+
+  # Connect to Microsoft Teams
+  try {
+    Connect-MicrosoftTeams -Credential $m365Creds | Out-Null
+  } catch {
+    $e = $_
+    Write-Host "Error connecting to Microsoft Teams"
+    throw $e
+  }
+
+  foreach ($policyCmdlet in $allPoliciesCmdlets) {
+    <#
+    $policyCmdlet = $allPoliciesCmdlets[0]
+    #>
+    $cmdletName = $policyCmdlet.Name
+    $policyFilePath = Join-Path $dataPoliciesFolder "$cmdletName.json"
+
+    # Getting cached policy params
+    $cachedPolicyParams = $null
+    $cmdletParamsFilePath = Join-Path $dataParamsFolder "$($cmdlet.Name).json"
+
+    if (Test-Path $policyFilePath) {
+      # Cached file exists, import it
+      $cachedPolicyParams = Get-Content -Path $policyFilePath | ConvertFrom-Json
+    }
+
+    # Getting current parameter list
+    $allParamList = @()
+    $invocationText = "$cmdletName"
+    if ($cmdletName -like "*policy") {
+      $invocationText += " -Identity Global"
+    }
+    $scriptBlock = [scriptblock]::Create($invocationText)
+    $allParamList = (& $scriptBlock).PSObject.Properties | Select-Object -Expand Name
+    
+    $addedPolicyParams = @($allParamList | Where-Object -FilterScript {$_ -notin $cachedPolicyParams})
+    $removedPolicyParams = @($cachedPolicyParams | Where-Object -FilterScript {$_ -notin $allParamList})
+
+    foreach ($addedPolicyParam in $addedPolicyParams) {
+      $changelogContent = @([pscustomobject]@{
+        Category = "Policy"
+        Cmdlet = $cmdletName
+        Param = $addedPolicyParam
+        Event = "Add"
+        Timestamp = Get-Date -UFormat $timeFormatString
+      }) + $changelogContent
+    }
+    foreach ($removedPolicyParam in $removedPolicyParams) {
+      $changelogContent = @([pscustomobject]@{
+        Category = "Policy"
+        Cmdlet = $cmdletName
+        Param = $removedPolicyParam
+        Event = "Remove"
+        Timestamp = Get-Date -UFormat $timeFormatString
+      }) + $changelogContent
+    }
+
+    $allParamList | ConvertTo-Json -Depth 10 | Out-File $policyFilePath -Force
+  } # end of foreach
+
+} catch {
+  $err = $_
+  Write-Host "Error processing MicrosofTeams policies"
+  Write-Error $err
+}
+
 # ================
 #endregion Process policies
 # ================
 
 # Disconnect Teams
+Disconnect-MicrosoftTeams
 
 # Export changelog
 $changelogContent | ConvertTo-Json -Depth 3 | Out-File $changelogPath -Force
