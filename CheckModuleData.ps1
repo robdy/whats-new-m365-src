@@ -212,7 +212,8 @@ try {
     "Get-CsTenantNetworkConfiguration",
     "Get-CsTeamsAudioConferencingPolicy",
     # Not working currently
-    "Get-CsTeamsWorkLoadPolicy"
+    "Get-CsTeamsWorkLoadPolicy",
+    "Get-CsTeamsEnhancedEncryptionPolicy"
     )
   }
 
