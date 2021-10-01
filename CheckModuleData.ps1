@@ -217,7 +217,7 @@ try {
     "Get-CsOnlineDialInConferencingTenantSettings",
     "Get-CsNetworkConfiguration",
     "Get-CsTenantNetworkConfiguration",
-    "Get-CsTeamsAudioConferencingPolicy",
+    "Get-CsTeamsAudioConferencingPolicy"
     )
   }
 
