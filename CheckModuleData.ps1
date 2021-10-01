@@ -79,6 +79,9 @@ if (Test-Path $changelogPath) {
 # Get all cmdlets
 $currentCmdlets = Get-Command -Module 'MicrosoftTeams'
 
+# Save module version
+$moduleVersion = Get-Module 'MicrosoftTeams' | Select -ExpandProperty Version
+
 # ================
 #region Process cmdlets
 # ================
@@ -102,6 +105,7 @@ try {
     $changelogContent = @([pscustomobject]@{
       Category = "Cmdlet"
       Cmdlet = $addedCmdlet.Name
+      Module = $moduleVersion
       Event = "Add"
       Timestamp = Get-Date -UFormat $timeFormatString
     }) + $changelogContent
@@ -110,6 +114,7 @@ try {
     $changelogContent = @([pscustomobject]@{
       Category = "Cmdlet"
       Cmdlet = $removedCmdlet.Name
+      Module = $moduleVersion
       Event = "Remove"
       Timestamp = Get-Date -UFormat $timeFormatString
     }) + $changelogContent
@@ -161,6 +166,7 @@ try {
         Category = "Param"
         Cmdlet = $cmdlet.Name
         Param = $addedParam
+        Module = $moduleVersion
         Event = "Add"
         Timestamp = Get-Date -UFormat $timeFormatString
       }) + $changelogContent
@@ -174,6 +180,7 @@ try {
         Category = "Param"
         Cmdlet = $cmdlet.Name
         Param = $removedParam
+        Module = $moduleVersion
         Event = "Remove"
         Timestamp = Get-Date -UFormat $timeFormatString
       }) + $changelogContent
@@ -211,9 +218,6 @@ try {
     "Get-CsNetworkConfiguration",
     "Get-CsTenantNetworkConfiguration",
     "Get-CsTeamsAudioConferencingPolicy",
-    # Not working currently
-    "Get-CsTeamsWorkLoadPolicy",
-    "Get-CsTeamsEnhancedEncryptionPolicy"
     )
   }
 
@@ -254,7 +258,14 @@ try {
       $invocationText += " -Identity Global"
     }
     $scriptBlock = [scriptblock]::Create($invocationText)
-    $allParamList = (& $scriptBlock).PSObject.Properties | Select-Object -Expand Name
+    try {
+      $allParamList = (& $scriptBlock).PSObject.Properties | Select-Object -Expand Name
+    } catch {
+      $e = $_
+      if ($e.exception.message -match "The term '.*' is not recognized as a name of a cmdlet, function, script file, or executable program.") {
+        Write-Host "Cmdlet not found error: $cmdletName"
+      }
+    }
     
     $addedPolicyParams = @($allParamList | Where-Object -FilterScript {$_ -notin $cachedPolicyParams})
     $removedPolicyParams = @($cachedPolicyParams | Where-Object -FilterScript {$_ -notin $allParamList})
@@ -264,6 +275,7 @@ try {
         Category = "Policy"
         Cmdlet = $cmdletName
         Param = $addedPolicyParam
+        Module = $moduleVersion
         Event = "Add"
         Timestamp = Get-Date -UFormat $timeFormatString
       }) + $changelogContent
@@ -273,6 +285,7 @@ try {
         Category = "Policy"
         Cmdlet = $cmdletName
         Param = $removedPolicyParam
+        Module = $moduleVersion
         Event = "Remove"
         Timestamp = Get-Date -UFormat $timeFormatString
       }) + $changelogContent
