@@ -80,7 +80,7 @@ if (Test-Path $changelogPath) {
 $currentCmdlets = Get-Command -Module 'MicrosoftTeams'
 
 # Save module version
-$moduleVersion = Get-Module 'MicrosoftTeams' | Select -ExpandProperty Version
+$moduleVersion = (Get-Module 'MicrosoftTeams' | Select -ExpandProperty Version).ToString()
 
 # ================
 #region Process cmdlets
