@@ -66,7 +66,8 @@ try {
   Set-PSRepository PSGallery -InstallationPolicy Trusted
   Install-Module MicrosoftTeams -Scope CurrentUser -AllowPrerelease -ErrorAction Stop
   Write-Host "MicrosoftTeams module installed"
-} catch {
+}
+catch {
   $err = $_
   Write-Host "Error installing MicrosofTeams module"
   Write-Error $err
@@ -96,32 +97,33 @@ try {
     $cachedCmdlets = Get-Content -Path $cmdletsFilePath | ConvertFrom-Json
   }
 
-  $addedCmdlets = @($currentCmdlets | Where-Object -FilterScript {$_.Name -notin $cachedCmdlets.Name})
-  $removedCmdlets = @($cachedCmdlets | Where-Object -FilterScript {$_.Name -notin $currentCmdlets.Name})
+  $addedCmdlets = @($currentCmdlets | Where-Object -FilterScript { $_.Name -notin $cachedCmdlets.Name })
+  $removedCmdlets = @($cachedCmdlets | Where-Object -FilterScript { $_.Name -notin $currentCmdlets.Name })
   Write-Host "Added cmdlets:   $($addedCmdlets.Count)"
   Write-Host "Removed cmdlets: $($removedCmdlets.Count)"
 
   foreach ($addedCmdlet in $addedCmdlets) {
     $changelogContent = @([pscustomobject]@{
-      Category = "Cmdlet"
-      Cmdlet = $addedCmdlet.Name
-      Module = $moduleVersion
-      Event = "Add"
-      Timestamp = Get-Date -UFormat $timeFormatString
-    }) + $changelogContent
+        Category  = "Cmdlet"
+        Cmdlet    = $addedCmdlet.Name
+        Module    = $moduleVersion
+        Event     = "Add"
+        Timestamp = Get-Date -UFormat $timeFormatString
+      }) + $changelogContent
   }
   foreach ($removedCmdlet in $removedCmdlets) {
     $changelogContent = @([pscustomobject]@{
-      Category = "Cmdlet"
-      Cmdlet = $removedCmdlet.Name
-      Module = $moduleVersion
-      Event = "Remove"
-      Timestamp = Get-Date -UFormat $timeFormatString
-    }) + $changelogContent
+        Category  = "Cmdlet"
+        Cmdlet    = $removedCmdlet.Name
+        Module    = $moduleVersion
+        Event     = "Remove"
+        Timestamp = Get-Date -UFormat $timeFormatString
+      }) + $changelogContent
   }
 
   $currentCmdlets | Select-Object Name, CommandType | ConvertTo-Csv | ConvertFrom-Csv | ConvertTo-Json -Depth 10 | Out-File $cmdletsFilePath -Force
-} catch {
+}
+catch {
   $err = $_
   Write-Host "Error processing MicrosofTeams cmdlets"
   Write-Error $err
@@ -143,57 +145,58 @@ try {
 
   # Do not process newly-added cmdlets
   foreach ($cmdlet in $currentCmdlets) {
-  <#
+    <#
   $cmdlet = $currentCmdlets[0]
   #>
-  $cachedParams = $null
-  $cmdletParamsFilePath = Join-Path $dataParamsFolder "$($cmdlet.Name).json"
+    $cachedParams = $null
+    $cmdletParamsFilePath = Join-Path $dataParamsFolder "$($cmdlet.Name).json"
 
-  if (Test-Path $cmdletParamsFilePath) {
-    # Cached file exists, import it
-    $cachedParams = Get-Content -Path $cmdletParamsFilePath | ConvertFrom-Json
-  }
-
-  # Getting current parameter list
-  $currentParams = $cmdlet.Parameters.GetEnumerator() | Select-Object -ExpandProperty Key
-  $addedParams = @($currentParams | Where-Object -FilterScript {$_ -notin $cachedParams})
-  $removedParams = @($cachedParams | Where-Object -FilterScript {$_ -notin $currentParams})
-
-  # Do not add changelog entry for newly-added cmdlet
-  if ($cmdlet.Name -notin $addedCmdlets.Name) {
-    foreach ($addedParam in $addedParams) {
-      $changelogContent = @([pscustomobject]@{
-        Category = "Param"
-        Cmdlet = $cmdlet.Name
-        Param = $addedParam
-        Module = $moduleVersion
-        Event = "Add"
-        Timestamp = Get-Date -UFormat $timeFormatString
-      }) + $changelogContent
+    if (Test-Path $cmdletParamsFilePath) {
+      # Cached file exists, import it
+      $cachedParams = Get-Content -Path $cmdletParamsFilePath | ConvertFrom-Json
     }
-  }
 
-  # Do not add changelog entry for removed cmdlets
-  if ($cmdlet.Name -notin $removedCmdlets.Name) {
-    foreach ($removedParam in $removedParams) {
-      $changelogContent = @([pscustomobject]@{
-        Category = "Param"
-        Cmdlet = $cmdlet.Name
-        Param = $removedParam
-        Module = $moduleVersion
-        Event = "Remove"
-        Timestamp = Get-Date -UFormat $timeFormatString
-      }) + $changelogContent
-    }  
-  }
+    # Getting current parameter list
+    $currentParams = $cmdlet.Parameters.GetEnumerator() | Select-Object -ExpandProperty Key
+    $addedParams = @($currentParams | Where-Object -FilterScript { $_ -notin $cachedParams })
+    $removedParams = @($cachedParams | Where-Object -FilterScript { $_ -notin $currentParams })
 
-  # Export params to the file
-  # Also applies to newly-added cmdlets
-  # So that next run has something to compare with
-  $currentParams | ConvertTo-Json -Depth 10 | Out-File $cmdletParamsFilePath -Force
-} # end of foreach
+    # Do not add changelog entry for newly-added cmdlet
+    if ($cmdlet.Name -notin $addedCmdlets.Name) {
+      foreach ($addedParam in $addedParams) {
+        $changelogContent = @([pscustomobject]@{
+            Category  = "Param"
+            Cmdlet    = $cmdlet.Name
+            Param     = $addedParam
+            Module    = $moduleVersion
+            Event     = "Add"
+            Timestamp = Get-Date -UFormat $timeFormatString
+          }) + $changelogContent
+      }
+    }
 
-} catch {
+    # Do not add changelog entry for removed cmdlets
+    if ($cmdlet.Name -notin $removedCmdlets.Name -and $cmdletName.Name -notin $addedCmdlets.Name) {
+      foreach ($removedParam in $removedParams) {
+        $changelogContent = @([pscustomobject]@{
+            Category  = "Param"
+            Cmdlet    = $cmdlet.Name
+            Param     = $removedParam
+            Module    = $moduleVersion
+            Event     = "Remove"
+            Timestamp = Get-Date -UFormat $timeFormatString
+          }) + $changelogContent
+      }  
+    }
+
+    # Export params to the file
+    # Also applies to newly-added cmdlets
+    # So that next run has something to compare with
+    $currentParams | ConvertTo-Json -Depth 10 | Out-File $cmdletParamsFilePath -Force
+  } # end of foreach
+
+}
+catch {
   $err = $_
   Write-Host "Error processing MicrosofTeams cmdlet params"
   Write-Error $err
@@ -209,15 +212,15 @@ try {
 
 try {
   $allPoliciesCmdlets = $currentCmdlets | Where-Object {
-  $_.Name -match "Get-Cs\w*(Policy|Configuration|Settings)$" -and 
-  $_.Name -notin @(
-    "Get-CsOnlineVoicemailUserSettings", # User cmdlet
-    "Get-CsUserPstnSettings", # User cmdlet
-    # Not available for dev tenant
-    "Get-CsOnlineDialInConferencingTenantSettings",
-    "Get-CsNetworkConfiguration",
-    "Get-CsTenantNetworkConfiguration",
-    "Get-CsTeamsAudioConferencingPolicy"
+    $_.Name -match "Get-Cs\w*(Policy|Configuration|Settings)$" -and 
+    $_.Name -notin @(
+      "Get-CsOnlineVoicemailUserSettings", # User cmdlet
+      "Get-CsUserPstnSettings", # User cmdlet
+      # Not available for dev tenant
+      "Get-CsOnlineDialInConferencingTenantSettings",
+      "Get-CsNetworkConfiguration",
+      "Get-CsTenantNetworkConfiguration",
+      "Get-CsTeamsAudioConferencingPolicy"
     )
   }
 
@@ -229,7 +232,8 @@ try {
   # Connect to Microsoft Teams
   try {
     Connect-MicrosoftTeams -Credential $m365Creds | Out-Null
-  } catch {
+  }
+  catch {
     $e = $_
     Write-Host "Error connecting to Microsoft Teams"
     throw $e
@@ -260,41 +264,43 @@ try {
     $scriptBlock = [scriptblock]::Create($invocationText)
     try {
       $allParamList = (& $scriptBlock).PSObject.Properties | Select-Object -Expand Name
-    } catch {
+    }
+    catch {
       $e = $_
       if ($e.exception.message -match "The term '.*' is not recognized as a name of a cmdlet, function, script file, or executable program.") {
         Write-Host "Cmdlet not found error: $cmdletName"
       }
     }
     
-    $addedPolicyParams = @($allParamList | Where-Object -FilterScript {$_ -notin $cachedPolicyParams})
-    $removedPolicyParams = @($cachedPolicyParams | Where-Object -FilterScript {$_ -notin $allParamList})
+    $addedPolicyParams = @($allParamList | Where-Object -FilterScript { $_ -notin $cachedPolicyParams })
+    $removedPolicyParams = @($cachedPolicyParams | Where-Object -FilterScript { $_ -notin $allParamList })
 
     foreach ($addedPolicyParam in $addedPolicyParams) {
       $changelogContent = @([pscustomobject]@{
-        Category = "Policy"
-        Cmdlet = $cmdletName
-        Param = $addedPolicyParam
-        Module = $moduleVersion
-        Event = "Add"
-        Timestamp = Get-Date -UFormat $timeFormatString
-      }) + $changelogContent
+          Category  = "Policy"
+          Cmdlet    = $cmdletName
+          Param     = $addedPolicyParam
+          Module    = $moduleVersion
+          Event     = "Add"
+          Timestamp = Get-Date -UFormat $timeFormatString
+        }) + $changelogContent
     }
     foreach ($removedPolicyParam in $removedPolicyParams) {
       $changelogContent = @([pscustomobject]@{
-        Category = "Policy"
-        Cmdlet = $cmdletName
-        Param = $removedPolicyParam
-        Module = $moduleVersion
-        Event = "Remove"
-        Timestamp = Get-Date -UFormat $timeFormatString
-      }) + $changelogContent
+          Category  = "Policy"
+          Cmdlet    = $cmdletName
+          Param     = $removedPolicyParam
+          Module    = $moduleVersion
+          Event     = "Remove"
+          Timestamp = Get-Date -UFormat $timeFormatString
+        }) + $changelogContent
     }
 
     $allParamList | ConvertTo-Json -Depth 10 | Out-File $policyFilePath -Force
   } # end of foreach
 
-} catch {
+}
+catch {
   $err = $_
   Write-Host "Error processing MicrosofTeams policies"
   Write-Error $err
