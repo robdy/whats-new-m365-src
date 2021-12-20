@@ -17,6 +17,7 @@ jobs:
           path: src
       - uses: actions/checkout@v2
         with:
+          repository: robdy/whats-new-m365
           ref: data
           path: data
       - name: Run script
