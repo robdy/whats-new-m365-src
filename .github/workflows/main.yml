@@ -20,6 +20,7 @@ jobs:
           repository: robdy/whats-new-m365
           ref: data
           path: data
+          token: ${{ secrets.GH_PAT }}
       - name: Run script
         id: checker
         run: ./src/CheckModuleData.ps1
