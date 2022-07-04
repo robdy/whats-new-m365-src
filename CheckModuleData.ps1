@@ -31,18 +31,7 @@
 # ================
 $dataFolder = 'data'
 
-# Cmdlets
-$dataCmdletsFolder = Join-Path $dataFolder 'cmdlets'
-$cmdletsFilePath = Join-Path $dataCmdletsFolder 'cmdlets.json'
-
-# Params
-$dataParamsFolder = Join-Path $dataFolder 'params'
-
-# Policies
-$dataPoliciesFolder = Join-Path $dataFolder 'policies'
-
 # Common
-$changelogPath = Join-Path $dataFolder 'changelog.json'
 $timeFormatString = '%Y-%m-%d %H:%M:%S'
 $m365PassString = ConvertTo-SecureString $env:M365_PASSWORD -AsPlainText -Force
 $m365Creds = New-Object System.Management.Automation.PSCredential ($env:M365_USERNAME, $m365PassString)
@@ -81,7 +70,31 @@ if (Test-Path $changelogPath) {
 $currentCmdlets = Get-Command -Module 'MicrosoftTeams'
 
 # Save module version
-$moduleVersion = (Get-Module 'MicrosoftTeams' | Select -ExpandProperty Version).ToString()
+$moduleData = Get-Module 'MicrosoftTeams'
+$moduleVersion = ($moduleData | Select-Object -ExpandProperty Version).ToString()
+$isPreview = ($moduleData.PrivateData.PSData.Prerelease).ToString()
+$moduleVersionString = "$($moduleVersion)$($isPreview ? "-$($isPreview)" : '')"
+
+# ================
+#region Folders and files
+# ================
+$dataFolderWithVersion = Join-Path $dataFolder ($isPreview ? 'preview' : 'ga')
+
+# Cmdlets
+$dataCmdletsFolder = Join-Path $dataFolderWithVersion 'cmdlets'
+$cmdletsFilePath = Join-Path $dataCmdletsFolder 'cmdlets.json'
+
+# Params
+$dataParamsFolder = Join-Path $dataFolderWithVersion 'params'
+
+# Policies
+$dataPoliciesFolder = Join-Path $dataFolderWithVersion 'policies'
+
+# Common
+$changelogPath = Join-Path $dataFolderWithVersion 'changelog.json'
+# ================
+#endregion Folders and files
+# ================
 
 # ================
 #region Process cmdlets
@@ -106,7 +119,7 @@ try {
     $changelogContent = @([pscustomobject]@{
         Category  = "Cmdlet"
         Cmdlet    = $addedCmdlet.Name
-        Module    = $moduleVersion
+        Module    = $moduleVersionString
         Event     = "Add"
         Timestamp = Get-Date -UFormat $timeFormatString
       }) + $changelogContent
@@ -115,7 +128,7 @@ try {
     $changelogContent = @([pscustomobject]@{
         Category  = "Cmdlet"
         Cmdlet    = $removedCmdlet.Name
-        Module    = $moduleVersion
+        Module    = $moduleVersionString
         Event     = "Remove"
         Timestamp = Get-Date -UFormat $timeFormatString
       }) + $changelogContent
@@ -168,7 +181,7 @@ try {
             Category  = "Param"
             Cmdlet    = $cmdlet.Name
             Param     = $addedParam
-            Module    = $moduleVersion
+            Module    = $moduleVersionString
             Event     = "Add"
             Timestamp = Get-Date -UFormat $timeFormatString
           }) + $changelogContent
@@ -182,7 +195,7 @@ try {
             Category  = "Param"
             Cmdlet    = $cmdlet.Name
             Param     = $removedParam
-            Module    = $moduleVersion
+            Module    = $moduleVersionString
             Event     = "Remove"
             Timestamp = Get-Date -UFormat $timeFormatString
           }) + $changelogContent
@@ -280,7 +293,7 @@ try {
           Category  = "Policy"
           Cmdlet    = $cmdletName
           Param     = $addedPolicyParam
-          Module    = $moduleVersion
+          Module    = $moduleVersionString
           Event     = "Add"
           Timestamp = Get-Date -UFormat $timeFormatString
         }) + $changelogContent
@@ -290,7 +303,7 @@ try {
           Category  = "Policy"
           Cmdlet    = $cmdletName
           Param     = $removedPolicyParam
-          Module    = $moduleVersion
+          Module    = $moduleVersionString
           Event     = "Remove"
           Timestamp = Get-Date -UFormat $timeFormatString
         }) + $changelogContent
