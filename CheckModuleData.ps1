@@ -62,10 +62,6 @@ catch {
   Write-Error $err
 }
 
-if (Test-Path $changelogPath) {
-  $changelogContent = Get-Content -Path $changelogPath | ConvertFrom-Json
-}
-
 # Get all cmdlets
 $currentCmdlets = Get-Command -Module 'MicrosoftTeams'
 
@@ -92,6 +88,10 @@ $dataPoliciesFolder = Join-Path $dataFolderWithVersion 'policies'
 
 # Common
 $changelogPath = Join-Path $dataFolderWithVersion 'changelog.json'
+if (Test-Path $changelogPath) {
+  $changelogContent = Get-Content -Path $changelogPath | ConvertFrom-Json
+}
+
 # ================
 #endregion Folders and files
 # ================
