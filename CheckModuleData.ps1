@@ -67,6 +67,7 @@ $currentCmdlets = Get-Command -Module 'MicrosoftTeams' -ListAvailable
 
 # Save module version
 $moduleData = Get-Module 'MicrosoftTeams'
+$moduleData
 $moduleVersion = ($moduleData | Select-Object -ExpandProperty Version).ToString()
 $isPreview = ($moduleData.PrivateData.PSData.Prerelease).ToString()
 $moduleVersionString = "$($moduleVersion)$($isPreview ? "-$($isPreview)" : '')"
