@@ -63,7 +63,7 @@ catch {
 }
 
 # Get all cmdlets
-$currentCmdlets = Get-Command -Module 'MicrosoftTeams'
+$currentCmdlets = Get-Command -Module 'MicrosoftTeams' -ListAvailable
 
 # Save module version
 $moduleData = Get-Module 'MicrosoftTeams'
