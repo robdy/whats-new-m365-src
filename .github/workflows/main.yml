@@ -12,10 +12,10 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           path: src
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           repository: robdy/whats-new-m365
           ref: data
