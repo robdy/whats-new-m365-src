@@ -63,10 +63,11 @@ catch {
 }
 
 # Get all cmdlets
-$currentCmdlets = Get-Command -Module 'MicrosoftTeams' -ListAvailable
+$currentCmdlets = Get-Command -Module 'MicrosoftTeams'
 
 # Save module version
 $moduleData = Get-Module 'MicrosoftTeams'
+Write-Host "Writing module data"
 $moduleData
 $moduleVersion = ($moduleData | Select-Object -ExpandProperty Version).ToString()
 $isPreview = ($moduleData.PrivateData.PSData.Prerelease).ToString()
