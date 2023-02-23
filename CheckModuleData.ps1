@@ -65,7 +65,7 @@ try {
   Get-Module 'MicrosoftTeams'
   Write-Host "Get module -ListAvailable"
   Get-Module 'MicrosoftTeams' -ListAvailable
-  Import-Module MicrosoftTeams
+  Import-Module MicrosoftTeams -UseWindowsPowerShell
 }
 catch {
   $err = $_
