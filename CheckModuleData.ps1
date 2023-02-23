@@ -55,6 +55,7 @@ if ($env:GITHUB_ACTIONS) {
 
 # Install newest module
 try {
+  $PSVersionTable
   Set-PSRepository PSGallery -InstallationPolicy Trusted
   Write-Verbose "Listing recent modules"
   find-module microsoftteams
