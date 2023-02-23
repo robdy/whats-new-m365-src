@@ -44,6 +44,9 @@ $m365Creds = New-Object System.Management.Automation.PSCredential ($env:M365_USE
 #region Processing
 # ================
 
+$verbosePreference = 'Continue'
+$debugPreference = 'Continue'
+
 Write-Host "Started processing MicrosoftTeams module"
 
 if ($env:GITHUB_ACTIONS) {
