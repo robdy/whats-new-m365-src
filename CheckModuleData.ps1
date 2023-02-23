@@ -76,7 +76,7 @@ catch {
 $currentCmdlets = Get-Command -Module 'MicrosoftTeams'
 
 # Save module version
-$moduleData = Get-Module 'MicrosoftTeams'
+$moduleData = Get-Module 'MicrosoftTeams' -ListAvailable
 Write-Host "Writing module data"
 $moduleData
 $moduleVersion = ($moduleData | Select-Object -ExpandProperty Version).ToString()
