@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-2019
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
@@ -23,6 +23,7 @@ jobs:
           token: ${{ secrets.GH_PAT }}
       - name: Run script
         id: checker
+        shell: pwsh
         run: ./src/CheckModuleData.ps1
         env: # Or as an environment variable
           M365_USERNAME: ${{ secrets.M365_USERNAME }}
