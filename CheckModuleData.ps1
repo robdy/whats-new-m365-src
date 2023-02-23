@@ -61,6 +61,10 @@ try {
   find-module microsoftteams -AllowPrerelease
   Install-Module MicrosoftTeams -Scope CurrentUser -AllowPrerelease -ErrorAction Stop -Verbose
   Write-Host "MicrosoftTeams module installed"
+  Write-Host "Get module"
+  Get-Module 'MicrosoftTeams'
+  Write-Host "Get module -ListAvailable"
+  Get-Module 'MicrosoftTeams' -ListAvailable
 }
 catch {
   $err = $_
