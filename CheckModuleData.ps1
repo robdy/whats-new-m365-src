@@ -134,7 +134,7 @@ try {
       }) + $changelogContent
   }
 
-  $currentCmdlets | Select-Object Name, CommandType | ConvertTo-Csv | ConvertFrom-Csv | ConvertTo-Json -Depth 10 | Out-File $cmdletsFilePath -Force
+  $currentCmdlets | Select-Object Name | Sort-Object Name | ConvertTo-Csv | ConvertFrom-Csv | ConvertTo-Json -Depth 10 | Out-File $cmdletsFilePath -Force
 }
 catch {
   $err = $_
@@ -205,7 +205,7 @@ try {
     # Export params to the file
     # Also applies to newly-added cmdlets
     # So that next run has something to compare with
-    $currentParams | ConvertTo-Json -Depth 10 | Out-File $cmdletParamsFilePath -Force
+    $currentParams | Sort-Object | ConvertTo-Json -Depth 10 | Out-File $cmdletParamsFilePath -Force
   } # end of foreach
 
 }
@@ -309,7 +309,7 @@ try {
         }) + $changelogContent
     }
 
-    $allParamList | ConvertTo-Json -Depth 10 | Out-File $policyFilePath -Force
+    $allParamList | Sort-Object | ConvertTo-Json -Depth 10 | Out-File $policyFilePath -Force
   } # end of foreach
 
 }
