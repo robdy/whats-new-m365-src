@@ -111,9 +111,7 @@ try {
   }
 
   $addedCmdlets = @($currentCmdlets | Where-Object -FilterScript { $_.Name -notin $cachedCmdlets.Name })
-  $removedCmdlets = @($cachedCmdlets | Where-Object -FilterScript { $_.Name -notin $currentCmdlets.Name })
   Write-Host "Added cmdlets:   $($addedCmdlets.Count)"
-  Write-Host "Removed cmdlets: $($removedCmdlets.Count)"
 
   foreach ($addedCmdlet in $addedCmdlets) {
     $changelogContent = @([pscustomobject]@{
@@ -124,17 +122,8 @@ try {
         Timestamp = Get-Date -UFormat $timeFormatString
       }) + $changelogContent
   }
-  foreach ($removedCmdlet in $removedCmdlets) {
-    $changelogContent = @([pscustomobject]@{
-        Category  = "Cmdlet"
-        Cmdlet    = $removedCmdlet.Name
-        Module    = $moduleVersionString
-        Event     = "Remove"
-        Timestamp = Get-Date -UFormat $timeFormatString
-      }) + $changelogContent
-  }
 
-  $currentCmdlets | Select-Object Name | Sort-Object Name | ConvertTo-Csv | ConvertFrom-Csv | ConvertTo-Json -Depth 10 | Out-File $cmdletsFilePath -Force
+  $cachedCmdlets + $currentCmdlets | Select-Object Name | Sort-Object Name -Unique | ConvertTo-Csv | ConvertFrom-Csv | ConvertTo-Json -Depth 10 | Out-File $cmdletsFilePath -Force
 }
 catch {
   $err = $_
@@ -172,7 +161,6 @@ try {
     # Getting current parameter list
     $currentParams = $cmdlet.Parameters.GetEnumerator() | Select-Object -ExpandProperty Key
     $addedParams = @($currentParams | Where-Object -FilterScript { $_ -notin $cachedParams })
-    $removedParams = @($cachedParams | Where-Object -FilterScript { $_ -notin $currentParams })
 
     # Do not add changelog entry for newly-added cmdlet
     if ($cmdlet.Name -notin $addedCmdlets.Name) {
@@ -188,24 +176,10 @@ try {
       }
     }
 
-    # Do not add changelog entry for removed cmdlets
-    if ($cmdlet.Name -notin $removedCmdlets.Name -and $cmdletName.Name -notin $addedCmdlets.Name) {
-      foreach ($removedParam in $removedParams) {
-        $changelogContent = @([pscustomobject]@{
-            Category  = "Param"
-            Cmdlet    = $cmdlet.Name
-            Param     = $removedParam
-            Module    = $moduleVersionString
-            Event     = "Remove"
-            Timestamp = Get-Date -UFormat $timeFormatString
-          }) + $changelogContent
-      }  
-    }
-
     # Export params to the file
     # Also applies to newly-added cmdlets
     # So that next run has something to compare with
-    $currentParams | Sort-Object | ConvertTo-Json -Depth 10 | Out-File $cmdletParamsFilePath -Force
+    $cachedParams + $currentParams | Sort-Object -Unique | ConvertTo-Json -Depth 10 | Out-File $cmdletParamsFilePath -Force
   } # end of foreach
 
 }
@@ -286,7 +260,6 @@ try {
     }
     
     $addedPolicyParams = @($allParamList | Where-Object -FilterScript { $_ -notin $cachedPolicyParams })
-    $removedPolicyParams = @($cachedPolicyParams | Where-Object -FilterScript { $_ -notin $allParamList })
 
     foreach ($addedPolicyParam in $addedPolicyParams) {
       $changelogContent = @([pscustomobject]@{
@@ -298,18 +271,8 @@ try {
           Timestamp = Get-Date -UFormat $timeFormatString
         }) + $changelogContent
     }
-    foreach ($removedPolicyParam in $removedPolicyParams) {
-      $changelogContent = @([pscustomobject]@{
-          Category  = "Policy"
-          Cmdlet    = $cmdletName
-          Param     = $removedPolicyParam
-          Module    = $moduleVersionString
-          Event     = "Remove"
-          Timestamp = Get-Date -UFormat $timeFormatString
-        }) + $changelogContent
-    }
 
-    $allParamList | Sort-Object | ConvertTo-Json -Depth 10 | Out-File $policyFilePath -Force
+    $cachedPolicyParams + $allParamList | Sort-Object -Unique | ConvertTo-Json -Depth 10 | Out-File $policyFilePath -Force
   } # end of foreach
 
 }
