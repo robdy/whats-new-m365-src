@@ -74,20 +74,18 @@ $moduleVersionString = "$($moduleVersion)$($isPreview ? "-$($isPreview)" : '')"
 # ================
 #region Folders and files
 # ================
-$dataFolderWithVersion = Join-Path $dataFolder ($isPreview ? 'preview' : 'ga')
-
 # Cmdlets
-$dataCmdletsFolder = Join-Path $dataFolderWithVersion 'cmdlets'
+$dataCmdletsFolder = Join-Path $dataFolder 'cmdlets'
 $cmdletsFilePath = Join-Path $dataCmdletsFolder 'cmdlets.json'
 
 # Params
-$dataParamsFolder = Join-Path $dataFolderWithVersion 'params'
+$dataParamsFolder = Join-Path $dataFolder 'params'
 
 # Policies
-$dataPoliciesFolder = Join-Path $dataFolderWithVersion 'policies'
+$dataPoliciesFolder = Join-Path $dataFolder 'policies'
 
 # Common
-$changelogPath = Join-Path $dataFolderWithVersion 'changelog.json'
+$changelogPath = Join-Path $dataFolder 'changelog.json'
 if (Test-Path $changelogPath) {
   $changelogContent = Get-Content -Path $changelogPath | ConvertFrom-Json
 }
